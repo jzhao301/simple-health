@@ -32,12 +32,19 @@ class DiseaseClassifier:
     return ufun_response(msg)
   
 class BatchDiseaseClassifier:
-  def __init__(self, disease, data_file, api_keys):
+  def __init__(self, disease, api_keys):
     self.df = None
-    self.loads_df(data_file)
+    self.api_keys = api_keys
     self.disease = disease
-    self.threads = [threading.Thread(target=self.worker(api_key)) for api_key in api_keys]
 
+  def reset(self):
+    self.df = pd.DataFrame()
+    self.df['Semaphore'] = 0
+    self.df['label'] = None
+    self.df['confidence'] = None
+    self.df['explanation'] = None
+    self.df['score'] = None
+    
   def load_df(self, data_file):
     self.df = pd.read_csv(data_file)
     self.df['Semaphore'] = 0
@@ -45,14 +52,16 @@ class BatchDiseaseClassifier:
     self.df['confidence'] = None
     self.df['explanation'] = None
     self.df['score'] = None
-  
-  def loads_df(self, data_file):
-    self.df = data_file
+    self.threads = [threading.Thread(target=self.worker(api_key)) for api_key in self.api_keys]
+
+  def loads_df(self, df):
+    self.df = df.copy()
     self.df['Semaphore'] = 0
     self.df['label'] = None
     self.df['confidence'] = None
     self.df['explanation'] = None
     self.df['score'] = None
+    self.threads = [threading.Thread(target=self.worker(api_key)) for api_key in self.api_keys]
 
   def worker(self, api_key):
     dc = DiseaseClassifier(self.disease, api_key)
@@ -62,7 +71,7 @@ class BatchDiseaseClassifier:
           self.df.at[i, 'Semaphore'] = 1
           self.df.loc[i, ['label', 'confidence', 'explanation', 'score']] = dc.classify(row['Patient Notes'])
           # self.df.loc[i, 'score'] = np.where(self.df.loc[i, 'label'] == 'Negative', np.around(1.0-self.df.loc[i, 'confidence'], 2), np.around(self.df.loc[i, 'confidence'], 2))
-          # print(self.df.loc[i])
+          print(self.df.loc[i])
           self.df.at[i, 'Semaphore'] = 0
 
   def classify(self):
@@ -73,8 +82,9 @@ class BatchDiseaseClassifier:
       thread.join()
     return self.df
   
-# bdc = BatchDiseaseClassifier('lymphedema', 'patient_data.csv', np.repeat(OPENAI_API_KEYS,10))
-# bdc.load_df()
+# bdc = BatchDiseaseClassifier('lymphedema', np.repeat(OPENAI_API_KEYS,10))
+# bdc.load_df('patient_data.csv')
+# # bdc.load_df()
 # print(bdc.classify())
 
 # DISEASE_FILE = 'lymphedema.json'
