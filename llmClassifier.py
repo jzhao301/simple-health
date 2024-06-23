@@ -19,13 +19,17 @@ class DiseaseClassifier:
 
   def classify(self, msg):
     def response(prompt):
-      res = json.loads( self.client.chat.completions.create(
+      res_raw = self.client.chat.completions.create(
                         model="gpt-3.5-turbo",
                         messages=[
-                            {"role": "system", "content": f"You are a knowledgable assistant, an expert in clinical trials and know important symptoms of diseases.\n\nGiven dictionary of labels: {self.labels} \n and a prompt consisting of a set of patient notes, classify the message and return the label, confidence score, and a one sentence explanation in {{\"label\":__,\"confidence\":__,\"explanation\":{{\"Skin changes\":__,\"Pain prescence\":__,\"Mental state\":__,\"Mobility\":__,}}}} json format."},
+                            {"role": "system", "content": f"You are a knowledgable assistant, an expert in clinical trials and know important symptoms of diseases.\n\nGiven dictionary of labels: {self.labels} \n and a prompt consisting of a set of patient notes, classify the message and return the label, confidence score, and a one sentence explanation in {{\"label\":__,\"confidence\":__,\"explanation\":{{\"Skin changes\":str,\"Pain prescence\":str,\"Mental state\":str,\"Mobility\":str}}}} json format."},
                             {"role": "user", "content": prompt},],
                         seed=42
-                        ).choices[0].message.content)
+                        ).choices[0].message.content
+      print(res_raw)
+      if '```json' in res_raw:
+        res_raw = res_raw[res_raw.find('```json')+7:res_raw.find('```', res_raw.find('```json')+7)]
+      res = json.loads(res_raw)
       res['score'] = np.where(res['label'] == 'Negative', np.around(1.0-res['confidence'], 2), np.around(res['confidence'], 2))
       return res
     ufun_response = np.frompyfunc(response, 1, 1)
@@ -82,10 +86,10 @@ class BatchDiseaseClassifier:
       thread.join()
     return self.df
   
-# bdc = BatchDiseaseClassifier('lymphedema', np.repeat(OPENAI_API_KEYS,10))
-# bdc.load_df('patient_data.csv')
+bdc = BatchDiseaseClassifier('lymphedema', np.repeat(OPENAI_API_KEYS,10))
+bdc.load_df('patient_data.csv')
 # # bdc.load_df()
-# print(bdc.classify())
+print(bdc.classify())
 
 # DISEASE_FILE = 'lymphedema.json'
 
