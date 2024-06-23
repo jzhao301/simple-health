@@ -1,22 +1,39 @@
-from bs4 import BeautifulSoup
-from openai import OpenAI
-import requests
+import openai
+import json
+import os
+# from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# URL of the page to scrape
-url = 'https://www.mayoclinic.org/diseases-conditions/atrial-fibrillation/symptoms-causes/syc-20350624'
+with open('disease_href.json', 'r') as fr:
+  disease_href = json.load(fr)
 
-oaiClient = OpenAI()
-# Fetch the HTML content
-response = requests.get(url)
-html_content = response.text
+def generate_disease_json(disease):
+    client = openai.Client()
+    href = disease_href[disease]
+    res_raw = client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {"role": "system", "content": f"You are a knowledgable assistant, an expert in clinical trials and know important symptoms of diseases.\n\nGiven s link to a page on Mayo Clinic can you generate a detailed description of a patient that tests positive for this disease and negative for this disease in {{\"Positive\":str,\"Negative\":str}} json format."},
+                            {"role": "user", "content": href},],
+                        seed=42
+                        ).choices[0].message.content
+  
+    if '```json' in res_raw:
+        res_raw = res_raw[res_raw.find('```json')+7:res_raw.find('```', res_raw.find('```json')+7)]
+    response = json.loads(res_raw)
+    with open(f'{disease}.json', 'w') as fw:
+        json.dump(response, fw)
 
-# Create a Beautiful Soup object
-soup = BeautifulSoup(html_content, 'html.parser')
 
-# Find all links and print them
-for link in soup.find_all('p'):
-    if 'subscribe' in link.get_text() or 'email' in link.get_text() or 'newsletter' in link.get_text():
-        continue
-    if len(link.get_text()) > 50:
-        print(link.get_text())
-    
+def main():
+    i = 0
+    for disease in disease_href.keys():
+        generate_disease_json(disease)
+        if i > 5:
+            break
+        i += 1
+
+if __name__ == '__main__':
+    main()
