@@ -1,6 +1,6 @@
 import csv
 import uvicorn
-import np
+import numpy
 import os
 
 from dotenv import load_dotenv
@@ -35,10 +35,12 @@ async def get_patient_data():
 
 @app.post("/api/retrieve-top-patients")
 async def retrieve_top_patients(request: Request):
-    patients_input = await request.json()
+    input = await request.json()
+    clinical_trial_notes = input["input"]
+    top_patients = input["topPatientsData"]
     OPENAI_API_KEYS = os.getenv("OPENAI_API_KEYS").split(',')
     bdc = BatchDiseaseClassifier('lymphedema', 'patient_data.csv', np.repeat(OPENAI_API_KEYS,10))
-    return {"patients": patients_input}
+    return
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
