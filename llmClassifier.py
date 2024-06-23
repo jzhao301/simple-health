@@ -9,7 +9,6 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 OPENAI_API_KEYS = os.getenv("OPENAI_API_KEYS").split(',')
-print(OPENAI_API_KEYS[0])
 
 class DiseaseClassifier:
   def __init__(self, disease, api_key=None):
@@ -23,7 +22,7 @@ class DiseaseClassifier:
       res = json.loads( self.client.chat.completions.create(
                         model="gpt-3.5-turbo",
                         messages=[
-                            {"role": "system", "content": f"You are a knowledgable assistant, an expert in clinical trials and know important symptoms of diseases.\n\nGiven dictionary of labels: {self.labels} \n and a prompt consisting of a set of patient notes, classify the message and return the label, confidence score, and a one sentence explanation in {{\"label\":__,\"confidence\":__,\"explaination\":__}} json format."},
+                            {"role": "system", "content": f"You are a knowledgable assistant, an expert in clinical trials and know important symptoms of diseases.\n\nGiven dictionary of labels: {self.labels} \n and a prompt consisting of a set of patient notes, classify the message and return the label, confidence score, and a one sentence explanation in {{\"label\":__,\"confidence\":__,\"explanation\":{{\"Skin changes\":__,\"Pain prescence\":__,\"Mental state\":__,\"Mobility\":__,}}}} json format."},
                             {"role": "user", "content": prompt},],
                         seed=42
                         ).choices[0].message.content)
@@ -35,12 +34,20 @@ class DiseaseClassifier:
 class BatchDiseaseClassifier:
   def __init__(self, disease, data_file, api_keys):
     self.df = None
-    self.load_df(data_file)
+    self.loads_df(data_file)
     self.disease = disease
     self.threads = [threading.Thread(target=self.worker(api_key)) for api_key in api_keys]
 
   def load_df(self, data_file):
     self.df = pd.read_csv(data_file)
+    self.df['Semaphore'] = 0
+    self.df['label'] = None
+    self.df['confidence'] = None
+    self.df['explanation'] = None
+    self.df['score'] = None
+  
+  def loads_df(self, data_file):
+    self.df = data_file
     self.df['Semaphore'] = 0
     self.df['label'] = None
     self.df['confidence'] = None
@@ -55,7 +62,7 @@ class BatchDiseaseClassifier:
           self.df.at[i, 'Semaphore'] = 1
           self.df.loc[i, ['label', 'confidence', 'explanation', 'score']] = dc.classify(row['Patient Notes'])
           # self.df.loc[i, 'score'] = np.where(self.df.loc[i, 'label'] == 'Negative', np.around(1.0-self.df.loc[i, 'confidence'], 2), np.around(self.df.loc[i, 'confidence'], 2))
-          print(self.df.loc[i])
+          # print(self.df.loc[i])
           self.df.at[i, 'Semaphore'] = 0
 
   def classify(self):
@@ -66,9 +73,9 @@ class BatchDiseaseClassifier:
       thread.join()
     return self.df
   
-bdc = BatchDiseaseClassifier('lymphedema', 'patient_data.csv', np.repeat(OPENAI_API_KEYS,10))
+# bdc = BatchDiseaseClassifier('lymphedema', 'patient_data.csv', np.repeat(OPENAI_API_KEYS,10))
 # bdc.load_df()
-print(bdc.classify())
+# print(bdc.classify())
 
 # DISEASE_FILE = 'lymphedema.json'
 

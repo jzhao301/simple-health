@@ -1,10 +1,13 @@
 import csv
 import uvicorn
-
+import np
+import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
+from llmClassifier import BatchDiseaseClassifier
 
 load_dotenv()
 
@@ -33,6 +36,8 @@ async def get_patient_data():
 @app.post("/api/retrieve-top-patients")
 async def retrieve_top_patients(request: Request):
     patients_input = await request.json()
+    OPENAI_API_KEYS = os.getenv("OPENAI_API_KEYS").split(',')
+    bdc = BatchDiseaseClassifier('lymphedema', 'patient_data.csv', np.repeat(OPENAI_API_KEYS,10))
     return {"patients": patients_input}
 
 if __name__ == "__main__":
