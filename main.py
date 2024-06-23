@@ -50,6 +50,11 @@ async def classify_disease(disease: str, patient_notes: str):
         return dc.classify(patient_notes)
     except Exception as e:
         return
+    
+@app.get("/api/disease-keys")
+async def get_keys():
+    with open('disease_hrefs.json', 'r') as fr:
+        return fr.read()
 
 @app.post("/api/retrieve-top-patients")
 async def retrieve_top_patients(request: Request):
