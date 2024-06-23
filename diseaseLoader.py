@@ -15,7 +15,7 @@ def generate_disease_json(disease):
     res_raw = client.chat.completions.create(
                         model="gpt-3.5-turbo",
                         messages=[
-                            {"role": "system", "content": f"You are a knowledgable assistant, an expert in clinical trials and know important symptoms of diseases.\n\nGiven s link to a page on Mayo Clinic can you generate a detailed description of a patient that tests positive for this disease and negative for this disease in {{\"Positive\":str,\"Negative\":str}} json format."},
+                            {"role": "system", "content": f"You are a knowledgable assistant, an expert in clinical trials and know important symptoms of diseases.\n\nGiven s link to a page on Mayo Clinic can you generate a detailed description of symptoms of the disease and a detailed description of a normal person that does not have this disease in {{\"Positive\":str,\"Negative\":str}} json format."},
                             {"role": "user", "content": href},],
                         seed=42
                         ).choices[0].message.content
