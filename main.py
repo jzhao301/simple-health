@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from llmClassifier import BatchDiseaseClassifier
+from llmClassifier import BatchDiseaseClassifier, DiseaseClassifier
+from diseaseLoader import generate_disease_json
 
 load_dotenv()
 
@@ -33,6 +34,22 @@ async def get_patient_data():
         reader = csv.reader(file)
         data = list(reader)
     return {"data": data}
+
+@app.get("/api/load-disease")
+async def load_disease(disease: str):
+    try:
+        generate_disease_json(disease)
+        return
+    except Exception as e:
+        return
+
+@app.get("/api/classify-disease")
+async def classify_disease(disease: str, patient_notes: str):
+    dc = DiseaseClassifier(disease)
+    try:
+        return dc.classify(patient_notes)
+    except Exception as e:
+        return
 
 @app.post("/api/retrieve-top-patients")
 async def retrieve_top_patients(request: Request):
