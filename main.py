@@ -60,15 +60,27 @@ async def get_keys():
 async def retrieve_top_patients(request: Request):
     input = await request.json()
     clinical_trial_notes = input["input"]
-    top_patients = input["topPatientsData"]["topPatientsData"]
-    all_patients = input["topPatientsData"]["allPatientsData"]
+    top_patients = input["topPatientsData"]
+    all_patients = input["allPatientsData"]
     OPENAI_API_KEYS = os.getenv("OPENAI_API_KEYS").split(',')
     bdc = BatchDiseaseClassifier('lymphedema', np.repeat(OPENAI_API_KEYS,10))
     all_patients_df = pd.DataFrame()
-    all_patients_df = pd.DataFrame(all_patients[1:], columns=all_patients[0])
+    all_patients_df = pd.DataFrame(all_patients[1:15], columns=all_patients[0])
     bdc.loads_df(all_patients_df)
-    bdc.classify()
-    return
+    result = bdc.classify()
+    out = result.copy()
+    out["explanation"] = out["explanation"].astype(str)
+    out = out[out["label"] == "Positive"]
+    column_names = list(out.columns)
+    values = out.values
+    result = []
+    for value in values:
+        lst = []
+        for v in value:
+            lst.append(str(v))
+        result.append(lst)
+    result.insert(0, column_names)
+    return {"data": result}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

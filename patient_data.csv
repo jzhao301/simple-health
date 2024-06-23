@@ -1,4 +1,4 @@
-Patient ID,Gender,Age,City,Numbers,Race,Patient Notes
+Patient ID,Gender,Age,City,Phone #,Race,Patient Notes
 PID0001,Male,45,NOVI,2487045807,White,Patient is undergoing regular breast cancer treatment. No signs of lymphedema detected. Noticed some unusual skin rashes. Patient has been feeling under the weather lately. Reported mild headaches and fatigue. Complained about occasional dizziness and nausea. Reported mild headaches and fatigue.
 PID0002,Female,48,Fulshear,8728883465,Hispanic,Patient is undergoing regular breast cancer treatment. No signs of lymphedema detected. Mentioned a family history of chronic illnesses. Reported mild headaches and fatigue. Has been struggling with maintaining a regular sleep schedule. Reported mild headaches and fatigue. Reported mild headaches and fatigue.
 PID0003,Male,61,Stony Brook,6319978468,Asian,Patient is undergoing regular breast cancer treatment. No signs of lymphedema detected. Noticed some unusual skin rashes. Reports feeling anxious about their condition. Expressed concerns about the treatment side effects. Expressed concerns about the treatment side effects. Expressed concerns about the treatment side effects.

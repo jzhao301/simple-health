@@ -26,7 +26,7 @@ class DiseaseClassifier:
                             {"role": "user", "content": prompt},],
                         seed=42
                         ).choices[0].message.content
-      print(res_raw)
+      # print(res_raw)
       if '```json' in res_raw:
         res_raw = res_raw[res_raw.find('```json')+7:res_raw.find('```', res_raw.find('```json')+7)]
       res = json.loads(res_raw)
@@ -75,7 +75,7 @@ class BatchDiseaseClassifier:
           self.df.at[i, 'Semaphore'] = 1
           self.df.loc[i, ['label', 'confidence', 'explanation', 'score']] = dc.classify(row['Patient Notes'])
           # self.df.loc[i, 'score'] = np.where(self.df.loc[i, 'label'] == 'Negative', np.around(1.0-self.df.loc[i, 'confidence'], 2), np.around(self.df.loc[i, 'confidence'], 2))
-          print(self.df.loc[i])
+          #print(self.df.loc[i])
           self.df.at[i, 'Semaphore'] = 0
 
   def classify(self):
@@ -86,10 +86,10 @@ class BatchDiseaseClassifier:
       thread.join()
     return self.df
   
-bdc = BatchDiseaseClassifier('lymphedema', np.repeat(OPENAI_API_KEYS,10))
-bdc.load_df('patient_data.csv')
-# # bdc.load_df()
-print(bdc.classify())
+# bdc = BatchDiseaseClassifier('lymphedema', np.repeat(OPENAI_API_KEYS,10))
+# bdc.load_df('patient_data.csv')
+# bdc.load_df()
+# print(bdc.classify())
 
 # DISEASE_FILE = 'lymphedema.json'
 
