@@ -11,11 +11,12 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 client = openai.Client()
-with open(f'disease.json', "r") as fr:
+with open(f'lymphedema.json', "r") as fr:
   labels = json.load(fr)
 
-patients = ['I am depressed', 'I am not depressed']
-prompt = f'given this dictionary of labels: {labels}, Can you classify the following messages and return the label, corresponding confidence scores, and a one sentence explanation in json format: {patients}'
+patientDf = pd.read_csv('Unstructured_Patient_Data_for_Breast_Cancer_Clinic - Unstructured_Patient_Data_for_Breast_Cancer_Clinic.csv')
+patients = patientDf['Patient Notes'].tolist()
+prompt = f'given this dictionary of labels: {labels}, Can you classify the following messages and return a list of the corresponding original message, labels, confidence scores, and a one sentence explanation in a \[{{\"message\":__,\"label\":__,\"confidence\":__,\"explaination\":__}}\] json format: {patients}'
 
 response = client.chat.completions.create(
 model="gpt-3.5-turbo",
@@ -24,12 +25,13 @@ messages=[
     {"role": "user", "content": prompt},]
 )
 
-data = json.loads(response.choices[0].message.content)['results']
+print(response.choices[0].message.content[3:-3])
+data = json.loads(response.choices[0].message.content[6:-3])
 
 
 df = pd.DataFrame.from_dict(data, orient='columns')
 
-df['score'] = np.where(df['label'] == 'Normal', 1.0-df['confidence'], df['confidence'])
+df['score'] = np.where(df['label'] == 'Negative', 1.0-df['confidence'], df['confidence'])
 
 
 print(df)
