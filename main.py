@@ -2,10 +2,13 @@ import csv
 import uvicorn
 import numpy as np
 import pandas as pd
+import json
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from llmClassifier import BatchDiseaseClassifier, DiseaseClassifier
@@ -46,14 +49,21 @@ async def load_disease(disease: str):
 @app.get("/api/classify-disease")
 async def classify_disease(disease: str, patient_notes: str):
     dc = DiseaseClassifier(disease)
+    print(patient_notes)
     try:
-        return dc.classify(patient_notes)
+        classification = dc.classify(str(patient_notes))
+        print(type(classification))
+        print(classification)
+        # print(json.dumps(classification))
+        json_str = json.dumps(classification, indent=4, default=str)
+
+        return Response(content=json_str, media_type='application/json')
     except Exception as e:
-        return
+        return e
     
 @app.get("/api/disease-keys")
 async def get_keys():
-    with open('disease_hrefs.json', 'r') as fr:
+    with open('disease_href.json', 'r') as fr:
         return fr.read()
 
 @app.post("/api/retrieve-top-patients")
